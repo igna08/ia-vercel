@@ -1,11 +1,16 @@
 import { openai } from '@ai-sdk/openai';
-import { experimental_wrapLanguageModel as wrapLanguageModel } from 'ai';
+import { streamText } from 'ai';
 
-import { customMiddleware } from './custom-middleware';
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
 
-export const customModel = (apiIdentifier: string) => {
-  return wrapLanguageModel({
-    model: openai(apiIdentifier),
-    middleware: customMiddleware,
+export async function POST(req: Request) {
+  const { messages } = await req.json();
+
+  const result = streamText({
+    model: openai('gpt-4-turbo'),
+    messages,
   });
-};
+
+  return result.toDataStreamResponse();
+}
